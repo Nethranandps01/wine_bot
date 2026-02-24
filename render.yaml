@@ -1,0 +1,46 @@
+services:
+  # -------------------------------------------------------------------
+  # BACKEND SERVICE (FastAPI)
+  # -------------------------------------------------------------------
+  - type: web
+    name: wine-bot-backend
+    env: python
+    rootDir: backend
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_LIVE_MODEL
+        value: "models/gemini-2.0-flash-exp"
+      - key: USE_DUMMY_GEMINI
+        value: "false"
+      
+  # -------------------------------------------------------------------
+  # FRONTEND SERVICE (Next.js)
+  # -------------------------------------------------------------------
+  - type: web
+    name: wine-bot-frontend
+    env: node
+    plan: free
+    buildCommand: "npm install -g pnpm && pnpm install && pnpm build"
+    startCommand: "pnpm start"
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_BACKEND_WS_URL
+        fromService:
+          type: web
+          name: wine-bot-backend
+          property: host
+          # Note: Next.js needs this as wss:// URL in the browser. 
+          # We'll prepend wss:// in the Next.js runtime, but here we can just pass the raw host.
+          # We define a separate generic var just in case.
+      - key: NEXT_PUBLIC_RENDER_BACKEND_HOST
+        fromService:
+          type: web
+          name: wine-bot-backend
+          property: host
