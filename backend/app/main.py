@@ -243,9 +243,9 @@ class ChatSession:
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     last_used: float = field(default_factory=time.time)
     _client: Optional[genai.Client] = None
-    _pipecat_live: Optional[GeminiLiveLLMService] = None
     _live_cm: Any = None
     _live_session: Any = None
+
 
     async def ensure_live(self) -> None:
         if self.dummy_mode:
