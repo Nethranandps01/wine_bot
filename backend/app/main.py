@@ -115,6 +115,38 @@ META_LINE_MARKERS = (
     "conversational start",
     "response refinement",
     "internal reasoning",
+    # Thinking narration patterns
+    "okay, i've got it",
+    "okay i've got it",
+    "i'm starting by",
+    "i am starting by",
+    "i'm going to",
+    "i am going to",
+    "i'll start by",
+    "i will start by",
+    "i'm keeping my",
+    "i am keeping my",
+    "i'm working on",
+    "i am working on",
+    "i'm also working",
+    "i am also working",
+    "i need to",
+    "let me think",
+    "let me craft",
+    "let me start",
+    "let me keep",
+    "i should",
+    "i'll mention",
+    "i will mention",
+    "i'll make sure",
+    "i will make sure",
+    "i'll focus",
+    "i will focus",
+    "my response",
+    "the user wants",
+    "the user asked",
+    "first, i",
+    "first i",
 )
 
 
@@ -136,6 +168,7 @@ def clean_user_transcript(text: str) -> str:
 def clean_assistant_text(text: str) -> str:
     cleaned = re.sub(r"<[^>]*>", " ", text)
     cleaned = re.sub(r"\*\*[^*]*\*\*", " ", cleaned)
+    cleaned = re.sub(r"\[THOUGHT\][\s\S]*?\[/THOUGHT\]", " ", cleaned)
     cleaned = re.sub(r"\[[^\]]*\]", " ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
