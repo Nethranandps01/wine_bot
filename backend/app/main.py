@@ -24,7 +24,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSock
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from google.genai import types as genai_types
-from pipecat.services.google.gemini_live.llm import GeminiLiveLLMService
+
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT_DIR / ".env")
@@ -257,14 +257,11 @@ class ChatSession:
         if not self.api_key:
             raise RuntimeError("Missing Gemini API key.")
 
-        # Pipecat is intentionally used as the Gemini Live integration layer.
-        self._pipecat_live = GeminiLiveLLMService(
+        # Create client directly — don't rely on pipecat's private _client attribute
+        self._client = genai.Client(
             api_key=self.api_key,
-            model=LIVE_MODEL,
-            voice_id=VOICE_ID,
-            system_instruction=SYSTEM_PROMPT,
+            http_options=genai_types.HttpOptions(api_version="v1alpha"),
         )
-        self._client = self._pipecat_live._client
 
         config = genai_types.LiveConnectConfig(
             generation_config=genai_types.GenerationConfig(
@@ -297,6 +294,7 @@ class ChatSession:
 
         self._live_cm = self._client.aio.live.connect(model=LIVE_MODEL, config=config)
         self._live_session = await self._live_cm.__aenter__()
+
 
     async def close(self) -> None:
         if self._live_cm is not None:

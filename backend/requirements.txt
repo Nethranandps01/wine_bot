@@ -4,4 +4,3 @@ python-dotenv
 python-multipart
 google-genai
 pipecat-ai[google]
-pytest
