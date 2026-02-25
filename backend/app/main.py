@@ -4,8 +4,17 @@ import contextlib
 import math
 import os
 import re
+import socket
 import time
 import uuid
+
+# Force IPv4 to bypass macOS IPv6 blackholing for Gemini WebSocket connections
+_orig_getaddrinfo = socket.getaddrinfo
+def _ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = _ipv4_getaddrinfo
+
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, List, Optional
