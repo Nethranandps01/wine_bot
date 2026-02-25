@@ -33,12 +33,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
-      - key: NEXT_PUBLIC_BACKEND_WS_URL
-        fromService:
-          type: web
-          name: wine-bot-backend
-          property: hostAndPort
-          # hostAndPort gives "hostname:port"; prepend wss:// and append /ws/chat
+      # NEXT_PUBLIC_RENDER_BACKEND_HOST = e.g. wine-bot-backend.onrender.com
+      # The frontend builds: wss://${NEXT_PUBLIC_RENDER_BACKEND_HOST}/ws/chat
       - key: NEXT_PUBLIC_RENDER_BACKEND_HOST
         fromService:
           type: web
