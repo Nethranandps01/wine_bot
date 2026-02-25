@@ -306,6 +306,17 @@ class ChatSession:
                 self._live_cm = None
                 self._live_session = None
 
+    async def _reset_live(self) -> None:
+        """Tear down the stale Live session so ensure_live() opens a fresh one."""
+        try:
+            if self._live_cm is not None:
+                await self._live_cm.__aexit__(None, None, None)
+        except Exception:
+            pass
+        self._live_cm = None
+        self._live_session = None
+
+
     async def _stream_dummy_reply(self, user_text: str) -> AsyncGenerator[Dict[str, Any], None]:
         reply = build_fallback_wine_answer(user_text, self.history)
         for token in split_text_stream(reply):
@@ -344,17 +355,26 @@ class ChatSession:
                     yield event
                 return
 
-            await self.ensure_live()
-            assert self._live_session is not None
+            for attempt in range(2):
+                try:
+                    await self.ensure_live()
+                    assert self._live_session is not None
+                    await self._live_session.send_realtime_input(text=cleaned_user_text)
+                    break
+                except Exception as conn_err:
+                    print(f"Live session error (attempt {attempt+1}): {conn_err}")
+                    await self._reset_live()
+                    if attempt == 1:
+                        raise
 
+            assert self._live_session is not None
             assistant_text_raw = ""
             assistant_text_clean_sent = ""
-
-            await self._live_session.send_realtime_input(text=cleaned_user_text)
 
             got_turn_end = False
             async with asyncio.timeout(45):
                 async for message in self._live_session.receive():
+
                     server_content = getattr(message, "server_content", None)
                     if not server_content:
                         continue
@@ -439,7 +459,17 @@ class ChatSession:
                     yield event
                 return
 
-            await self.ensure_live()
+            for attempt in range(2):
+                try:
+                    await self.ensure_live()
+                    assert self._live_session is not None
+                    break
+                except Exception as conn_err:
+                    print(f"Live session error in audio path (attempt {attempt+1}): {conn_err}")
+                    await self._reset_live()
+                    if attempt == 1:
+                        raise
+
             assert self._live_session is not None
 
             stream_sample_rate = SAMPLE_RATE
